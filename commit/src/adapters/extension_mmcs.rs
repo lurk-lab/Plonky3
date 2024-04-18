@@ -51,9 +51,8 @@ where
         (opened_ext_values, proof)
     }
 
-    fn get_matrices<'a, M: Matrix<EF>>(&self, prover_data: &'a Self::ProverData<M>) -> Vec<&'a M> {
-        self.inner
-            .get_matrices(prover_data)
+    fn get_matrices<M: Matrix<EF>>(prover_data: &Self::ProverData<M>) -> Vec<&M> {
+        InnerMmcs::get_matrices(prover_data)
             .into_iter()
             .map(|mat| mat.inner_ref())
             .collect()
