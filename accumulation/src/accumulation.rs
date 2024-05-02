@@ -5,10 +5,11 @@ use core::iter;
 use core::marker::PhantomData;
 
 use itertools::{Itertools, zip_eq};
+use serde::{Deserialize, Serialize};
+use serde::de::DeserializeOwned;
 
 use p3_challenger::{CanObserve, CanSample, CanSampleBits};
 use p3_commit::Mmcs;
-
 use p3_field::{ExtensionField, Field};
 use p3_matrix::{Dimensions, Matrix};
 use p3_matrix::dense::RowMajorMatrix;
@@ -16,7 +17,7 @@ use p3_maybe_rayon::prelude::*;
 use p3_util::log2_strict_usize;
 
 struct Committed<Val, InputMmcs: Mmcs<Val>>
-where Val: Send + Sync {
+    where Val: Send + Sync {
     // Merkle root
     commitment: InputMmcs::Commitment,
     // Merkle tree and leaves
@@ -24,27 +25,24 @@ where Val: Send + Sync {
 }
 
 
+#[derive(Serialize, Deserialize, Clone)]
+#[serde(bound = "")]
 struct Proof<Val, Ext, InputMmcs, AccMmcs>
-where
-    Val: Field,
-    Ext: ExtensionField<Val>,
-    InputMmcs: Mmcs<Val>,
-    AccMmcs: Mmcs<Ext>
+    where
+        Val: Field,
+        Ext: ExtensionField<Val>,
+        InputMmcs: Mmcs<Val>,
+        AccMmcs: Mmcs<Ext>
 {
     acc_commit: AccMmcs::Commitment,
     openings: Vec<(Vec<Vec<Val>>, InputMmcs::Proof, AccMmcs::Proof)>,
 }
 
 #[derive(Debug)]
-enum Error<Val, Ext, InputMmcs, AccMmcs>
-where
-    Val: Field,
-    Ext: ExtensionField<Val>,
-    InputMmcs: Mmcs<Val>,
-    AccMmcs: Mmcs<Ext> {
-    SizeError(),
-    InputError(InputMmcs::Error),
-    AccError(AccMmcs::Error),
+enum Error<InputMmcsErr, AccMmcsErr> {
+    SizeError,
+    InputError(InputMmcsErr),
+    AccError(AccMmcsErr),
 }
 
 
@@ -57,11 +55,9 @@ pub trait AccumulationScheme<Challenger>
     type AccCommitment;
 
 
-    type Proof;
-    // type Proof: Serialize + DeserializeOwned;
+    type Proof: Serialize + DeserializeOwned;
 
-    type Error;
-    // type Error: Debug;
+    type Error: Debug;
 
     fn prove(
         &self,
@@ -86,19 +82,19 @@ struct TestAccumulationScheme<Val, Ext, InputMmcs, AccMmcs, Challenger> {
 }
 
 impl<Val, Ext, InputMmcs, AccMmcs, Challenger> AccumulationScheme<Challenger> for TestAccumulationScheme<Val, Ext, InputMmcs, AccMmcs, Challenger>
-where
-    Val: Field,
-    Ext: ExtensionField<Val>,
-    InputMmcs: Mmcs<Val>,
-    AccMmcs: Mmcs<Ext>,
-    Challenger: CanObserve<AccMmcs::Commitment> + CanSample<Ext> + CanSampleBits<usize>,
+    where
+        Val: Field,
+        Ext: ExtensionField<Val>,
+        InputMmcs: Mmcs<Val>,
+        AccMmcs: Mmcs<Ext>,
+        Challenger: CanObserve<AccMmcs::Commitment> + CanSample<Ext> + CanSampleBits<usize>,
 {
     type Input = Committed<Val, InputMmcs>;
     type InputCommitment = InputMmcs::Commitment;
     type Acc = Committed<Ext, AccMmcs>;
     type AccCommitment = AccMmcs::Commitment;
     type Proof = Proof<Val, Ext, InputMmcs, AccMmcs>;
-    type Error = Error<Val, Ext, InputMmcs, AccMmcs>;
+    type Error = Error<InputMmcs::Error, AccMmcs::Error>;
 
     /// Given a commitment to a list of matrices of the same height,
     fn prove(&self, input: Self::Input, challenger: &mut Challenger) -> Result<(Self::Acc, Self::Proof), Self::Error> {
@@ -107,7 +103,7 @@ where
         let alpha: Ext = challenger.sample();
 
         let height = matrices.iter().map(|mat| mat.height())
-            .all_equal_value().map_err(|_| Error::SizeError().into())?;
+            .all_equal_value().map_err(|_| Error::SizeError)?;
         let log_height = log2_strict_usize(height);
 
         // We compute the RLC of the columns of each matrix using powers of alpha.
@@ -167,7 +163,7 @@ where
 
         let height = dimensions.iter().map(|dim| dim.height)
             .all_equal_value()
-            .map_err(|_| Error::SizeError())?;
+            .map_err(|_| Error::SizeError)?;
         let log_height = log2_strict_usize(height);
 
         let alpha: Ext = challenger.sample();
