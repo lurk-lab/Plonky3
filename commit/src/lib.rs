@@ -11,7 +11,6 @@ mod pcs;
 
 #[cfg(any(test, feature = "test-utils"))]
 pub mod testing;
-mod accumulation;
 
 pub use adapters::*;
 pub use domain::*;

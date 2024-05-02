@@ -7,14 +7,13 @@ use core::marker::PhantomData;
 use itertools::{Itertools, zip_eq};
 
 use p3_challenger::{CanObserve, CanSample, CanSampleBits};
+use p3_commit::Mmcs;
+
 use p3_field::{ExtensionField, Field};
 use p3_matrix::{Dimensions, Matrix};
 use p3_matrix::dense::RowMajorMatrix;
 use p3_maybe_rayon::prelude::*;
 use p3_util::log2_strict_usize;
-use crate::accumulation::Error::{AccError, InputError, SizeError};
-
-use crate::Mmcs;
 
 struct Committed<Val, InputMmcs: Mmcs<Val>>
 where Val: Send + Sync {
@@ -108,8 +107,7 @@ where
         let alpha: Ext = challenger.sample();
 
         let height = matrices.iter().map(|mat| mat.height())
-            .all_equal_value()
-            .or_else(|_| Err(SizeError()))?;
+            .all_equal_value().map_err(|_| Error::SizeError().into())?;
         let log_height = log2_strict_usize(height);
 
         // We compute the RLC of the columns of each matrix using powers of alpha.
@@ -169,7 +167,7 @@ where
 
         let height = dimensions.iter().map(|dim| dim.height)
             .all_equal_value()
-            .or_else(|_| Err(SizeError()))?;
+            .map_err(|_| Error::SizeError())?;
         let log_height = log2_strict_usize(height);
 
         let alpha: Ext = challenger.sample();
@@ -195,12 +193,90 @@ where
                 });
 
             // Verify the opened input values
-            self.input_mmcs.verify_batch(&input, dimensions, query_index, input_values, input_proof).map_err(InputError)?;
+            self.input_mmcs.verify_batch(&input, dimensions, query_index, input_values, input_proof).map_err(Error::InputError)?;
 
             // Verify the correct computation of the value of acc
-            self.acc_mmcs.verify_batch(acc_commit, &acc_dimensions, query_index, &vec![vec![acc_value]], acc_proof).map_err(AccError)?;
+            self.acc_mmcs.verify_batch(acc_commit, &acc_dimensions, query_index, &vec![vec![acc_value]], acc_proof).map_err(Error::AccError)?;
         }
         Ok(acc_commit.clone())
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use p3_baby_bear::{BabyBear, DiffusionMatrixBabyBear};
+    use p3_challenger::DuplexChallenger;
+    use p3_commit::Mmcs;
+    use p3_commit::ExtensionMmcs;
+    use p3_field::extension::BinomialExtensionField;
+    use p3_poseidon2::{Poseidon2, Poseidon2ExternalMatrixGeneral};
+    use p3_symmetric::{PaddingFreeSponge, TruncatedPermutation};
+    use p3_merkle_tree::FieldMerkleTreeMmcs;
+
+    use rand::{SeedableRng};
+    use rand_chacha::ChaCha20Rng;
+
+    use super::*;
+
+    type Val = BabyBear;
+    type Ext = BinomialExtensionField<Val, 4>;
+
+    type Perm = Poseidon2<Val, Poseidon2ExternalMatrixGeneral, DiffusionMatrixBabyBear, 16, 7>;
+    type MyHash = PaddingFreeSponge<Perm, 16, 8, 8>;
+    type MyCompress = TruncatedPermutation<Perm, 2, 8, 16>;
+
+    type ValMmcs = FieldMerkleTreeMmcs<
+        <Val as Field>::Packing,
+        <Val as Field>::Packing,
+        MyHash,
+        MyCompress,
+        8,
+    >;
+    type ExtMmcs = ExtensionMmcs<Val, Ext, ValMmcs>;
+    type Challenger = DuplexChallenger<Val, Perm, 16>;
+
+    type MyScheme = TestAccumulationScheme<Val, Ext, ValMmcs, ExtMmcs, Challenger>;
+
+    #[test]
+    fn simple() {
+        let mut rng = ChaCha20Rng::seed_from_u64(0);
+
+        let perm = Perm::new_from_rng_128(
+            Poseidon2ExternalMatrixGeneral,
+            DiffusionMatrixBabyBear,
+            &mut rng,
+        );
+        let hash = MyHash::new(perm.clone());
+        let compress = MyCompress::new(perm.clone());
+
+        let input_mmcs = ValMmcs::new(hash, compress);
+        let acc_mmcs = ExtMmcs::new(input_mmcs.clone());
+
+        let mut challenger_p = Challenger::new(perm.clone());
+        let mut challenger_v = Challenger::new(perm.clone());
+
+        let config = MyScheme {
+            num_queries: 256,
+            input_mmcs,
+            acc_mmcs,
+            _marker: Default::default(),
+        };
+
+
+        let height: usize = 1 << 16;
+
+        let widths = [1, 4, 9];
+
+        let matrices = widths.into_iter().map(|width| RowMajorMatrix::<Val>::rand(&mut rng, height, width)).collect_vec();
+        let dimensions = matrices.iter().map(|mat| mat.dimensions()).collect_vec();
+
+        let (input_commit, input_data) = config.input_mmcs.commit(matrices);
+        let input = Committed { commitment: input_commit.clone(), data: input_data };
+
+        let (acc, proof) = config.prove(input, &mut challenger_p).unwrap();
+
+        let acc_commit = config.verify(input_commit, &dimensions, &proof, &mut challenger_v).unwrap();
+
+        assert_eq!(acc.commitment, acc_commit);
+    }
+}
