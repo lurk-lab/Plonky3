@@ -182,7 +182,7 @@ where
     ) -> impl Matrix<Val> + 'a {
         // todo: handle extrapolation for LDEs we don't have
         assert_eq!(domain.shift, Val::generator());
-        let lde = InputMmcs::get_matrices(prover_data)[idx];
+        let lde = self.mmcs.get_matrices(prover_data)[idx];
         assert!(lde.height() >= domain.size());
         lde.split_rows(domain.size()).0.bit_reverse_rows()
     }
@@ -244,7 +244,8 @@ where
             .iter()
             .map(|(data, points)| {
                 (
-                    InputMmcs::get_matrices(data)
+                    self.mmcs
+                        .get_matrices(data)
                         .into_iter()
                         .map(|m| m.as_view())
                         .collect_vec(),

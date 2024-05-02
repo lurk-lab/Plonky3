@@ -102,7 +102,7 @@ where
 
     /// Given a commitment to a list of matrices of the same height,
     fn prove(&self, input: Self::Input, challenger: &mut Challenger) -> Result<(Self::Acc, Self::Proof), Self::Error> {
-        let matrices = InputMmcs::get_matrices(&input.data);
+        let matrices = self.input_mmcs.get_matrices(&input.data);
 
         let alpha: Ext = challenger.sample();
 

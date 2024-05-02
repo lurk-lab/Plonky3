@@ -89,9 +89,10 @@ where
         (openings, proof)
     }
 
-    fn get_matrices<M: Matrix<P::Scalar>>(
-        prover_data: &Self::ProverData<M>,
-    ) -> Vec<&M> {
+    fn get_matrices<'a, M: Matrix<P::Scalar>>(
+        &self,
+        prover_data: &'a Self::ProverData<M>,
+    ) -> Vec<&'a M> {
         prover_data.leaves.iter().collect()
     }
 

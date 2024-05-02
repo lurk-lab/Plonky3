@@ -134,7 +134,7 @@ where
         domain: Self::Domain,
     ) -> impl Matrix<Val> + 'a {
         // TODO do this correctly
-        let mat = InputMmcs::get_matrices(&data.mmcs_data)[idx];
+        let mat = self.mmcs.get_matrices(&data.mmcs_data)[idx];
         assert_eq!(mat.height(), 1 << domain.log_n);
         assert_eq!(domain, data.committed_domains[idx]);
         mat.inner.as_view()
@@ -173,7 +173,7 @@ where
         let values: OpenedValues<Challenge> = rounds
             .iter()
             .map(|(data, points_for_mats)| {
-                let mats = InputMmcs::get_matrices(&data.mmcs_data);
+                let mats = self.mmcs.get_matrices(&data.mmcs_data);
                 izip!(&data.committed_domains, mats, points_for_mats)
                     .map(|(lde_domain, permuted_mat, points_for_mat)| {
                         // Get the unpermuted matrix.
@@ -271,7 +271,10 @@ where
 
         // Fold all first layers at bivariate_beta.
 
-        let fri_input: Vec<Vec<Challenge>> = FriMmcs::get_matrices(&first_layer_data)
+        let fri_input: Vec<Vec<Challenge>> = self
+            .fri_config
+            .mmcs
+            .get_matrices(&first_layer_data)
             .into_iter()
             .map(|m| fold_bivariate(bivariate_beta, m.as_view()))
             // Reverse, because FRI expects descending by height

@@ -91,7 +91,7 @@ where
 
         let beta: F = challenger.sample();
         // We passed ownership of `current` to the MMCS, so get a reference to it
-        let leaves = M::get_matrices(&prover_data).pop().unwrap();
+        let leaves = config.mmcs.get_matrices(&prover_data).pop().unwrap();
         folded = g.fold_matrix(beta, leaves.as_view());
 
         commits.push(commit);
