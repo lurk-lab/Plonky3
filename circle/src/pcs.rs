@@ -271,10 +271,7 @@ where
 
         // Fold all first layers at bivariate_beta.
 
-        let fri_input: Vec<Vec<Challenge>> = self
-            .fri_config
-            .mmcs
-            .get_matrices(&first_layer_data)
+        let fri_input: Vec<Vec<Challenge>> = FriMmcs::get_matrices(&first_layer_data)
             .into_iter()
             .map(|m| fold_bivariate(bivariate_beta, m.as_view()))
             // Reverse, because FRI expects descending by height
