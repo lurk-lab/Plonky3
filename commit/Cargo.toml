@@ -11,6 +11,7 @@ test-utils = ["dep:p3-dft"]
 p3-challenger = { path = "../challenger" }
 p3-field = { path = "../field" }
 p3-matrix = { path = "../matrix" }
+p3-maybe-rayon = { path = "../maybe-rayon" }
 p3-util = { path = "../util" }
 
 itertools = "0.13.0"
