@@ -7,7 +7,7 @@ extern crate alloc;
 mod compression;
 mod hash;
 mod hasher;
-mod permutation;
+pub mod permutation;
 mod serializing_hasher;
 mod sponge;
 
