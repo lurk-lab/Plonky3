@@ -39,7 +39,7 @@ where
 // [ 1 1 2 3 ]
 // [ 3 1 1 2 ].
 // This is more efficient than the previous matrix.
-fn apply_mat4<AF>(x: &mut [AF; 4])
+pub fn apply_mat4<AF>(x: &mut [AF; 4])
 where
     AF: AbstractField,
 {
