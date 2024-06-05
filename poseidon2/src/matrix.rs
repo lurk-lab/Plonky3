@@ -1,3 +1,4 @@
+use crate::supported_width;
 use p3_field::{AbstractField, PrimeField};
 use p3_mds::MdsPermutation;
 use p3_symmetric::Permutation;
@@ -92,6 +93,7 @@ fn mds_light_permutation<AF: AbstractField, MdsPerm4: MdsPermutation<AF, 4>, con
     state: &mut [AF; WIDTH],
     mdsmat: MdsPerm4,
 ) {
+    assert!(supported_width(WIDTH), "Unsupported width");
     match WIDTH {
         2 => {
             let sum = state[0].clone() + state[1].clone();
@@ -106,7 +108,7 @@ fn mds_light_permutation<AF: AbstractField, MdsPerm4: MdsPermutation<AF, 4>, con
             state[2] += sum;
         }
 
-        4 | 8 | 12 | 16 | 20 | 24 => {
+        _ => {
             // First, we apply M_4 to each consecutive four elements of the state.
             // In Appendix B's terminology, this replaces each x_i with x_i'.
             for i in (0..WIDTH).step_by(4) {
@@ -135,10 +137,6 @@ fn mds_light_permutation<AF: AbstractField, MdsPerm4: MdsPermutation<AF, 4>, con
             for i in 0..WIDTH {
                 state[i] += sums[i % 4].clone();
             }
-        }
-
-        _ => {
-            panic!("Unsupported width");
         }
     }
 }
