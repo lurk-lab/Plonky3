@@ -106,7 +106,8 @@ fn mds_light_permutation<AF: AbstractField, MdsPerm4: MdsPermutation<AF, 4>, con
             state[2] += sum;
         }
 
-        4 | 8 | 12 | 16 | 20 | 24 | 28 | 32 | 36 | 40 => {
+        _ => {
+            assert!(WIDTH % 4 == 0, "Unsupported width");
             // First, we apply M_4 to each consecutive four elements of the state.
             // In Appendix B's terminology, this replaces each x_i with x_i'.
             for i in (0..WIDTH).step_by(4) {
@@ -135,10 +136,6 @@ fn mds_light_permutation<AF: AbstractField, MdsPerm4: MdsPermutation<AF, 4>, con
             for i in 0..WIDTH {
                 state[i] += sums[i % 4].clone();
             }
-        }
-
-        _ => {
-            panic!("Unsupported width");
         }
     }
 }

@@ -21,8 +21,6 @@ use rand::distributions::{Distribution, Standard};
 use rand::Rng;
 pub use round_numbers::poseidon2_round_numbers_128;
 
-const SUPPORTED_WIDTHS: [usize; 12] = [2, 3, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40];
-
 /// The Poseidon2 permutation.
 #[derive(Clone, Debug)]
 pub struct Poseidon2<F, MdsLight, Diffusion, const WIDTH: usize, const D: u64> {
@@ -60,7 +58,7 @@ where
         internal_constants: Vec<F>,
         internal_linear_layer: Diffusion,
     ) -> Self {
-        assert!(SUPPORTED_WIDTHS.contains(&WIDTH));
+        assert!(WIDTH == 2 || WIDTH == 3 || WIDTH % 4 == 0);
         Self {
             rounds_f,
             external_constants,
