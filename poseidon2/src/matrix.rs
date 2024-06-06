@@ -93,7 +93,7 @@ fn mds_light_permutation<AF: AbstractField, MdsPerm4: MdsPermutation<AF, 4>, con
     state: &mut [AF; WIDTH],
     mdsmat: MdsPerm4,
 ) {
-    assert!(supported_width(WIDTH), "Unsupported width");
+    assert!(supported_width::<WIDTH>(), "Unsupported width");
     match WIDTH {
         2 => {
             let sum = state[0].clone() + state[1].clone();
