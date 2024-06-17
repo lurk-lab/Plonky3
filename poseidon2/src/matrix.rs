@@ -1,4 +1,3 @@
-use crate::supported_width;
 use p3_field::AbstractField;
 use p3_mds::MdsPermutation;
 use p3_symmetric::Permutation;
