@@ -7,4 +7,6 @@
 xclippy = [
     "clippy", "--all-targets", "--",
     "-Wclippy::all",
+    "-Aclippy::multiple_bound_locations",
+    #"-Arenamed_and_removed_lints",
 ]

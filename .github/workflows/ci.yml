@@ -10,6 +10,10 @@ env:
   CARGO_TERM_COLOR: always
   CARGO_INCREMENTAL: 1
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   test:
     # Change to warp-ubuntu-latest-x64-16x for a more powerful runner
@@ -70,6 +74,7 @@ jobs:
         with:
           repository: lurk-lab/ci-workflows
           path: ci-workflows
+          ref: downstream-transitive
       - uses: ./ci-workflows/.github/actions/ci-env
       # Check that lurk-lab/sphinx compiles
       - name: Set env
