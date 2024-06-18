@@ -100,10 +100,7 @@ impl<AF: AbstractField<F = Goldilocks>> Permutation<[AF; 8]> for DiffusionMatrix
     }
 }
 
-impl<AF: AbstractField<F = Goldilocks>> DiffusionPermutation<AF, 8>
-    for DiffusionMatrixGoldilocks
-{
-}
+impl<AF: AbstractField<F = Goldilocks>> DiffusionPermutation<AF, 8> for DiffusionMatrixGoldilocks {}
 
 impl<AF: AbstractField<F = Goldilocks>> Permutation<[AF; 12]> for DiffusionMatrixGoldilocks {
     fn permute_mut(&self, state: &mut [AF; 12]) {
@@ -111,10 +108,7 @@ impl<AF: AbstractField<F = Goldilocks>> Permutation<[AF; 12]> for DiffusionMatri
     }
 }
 
-impl<AF: AbstractField<F = Goldilocks>> DiffusionPermutation<AF, 12>
-    for DiffusionMatrixGoldilocks
-{
-}
+impl<AF: AbstractField<F = Goldilocks>> DiffusionPermutation<AF, 12> for DiffusionMatrixGoldilocks {}
 
 impl<AF: AbstractField<F = Goldilocks>> Permutation<[AF; 16]> for DiffusionMatrixGoldilocks {
     fn permute_mut(&self, state: &mut [AF; 16]) {
@@ -122,10 +116,7 @@ impl<AF: AbstractField<F = Goldilocks>> Permutation<[AF; 16]> for DiffusionMatri
     }
 }
 
-impl<AF: AbstractField<F = Goldilocks>> DiffusionPermutation<AF, 16>
-    for DiffusionMatrixGoldilocks
-{
-}
+impl<AF: AbstractField<F = Goldilocks>> DiffusionPermutation<AF, 16> for DiffusionMatrixGoldilocks {}
 
 impl<AF: AbstractField<F = Goldilocks>> Permutation<[AF; 20]> for DiffusionMatrixGoldilocks {
     fn permute_mut(&self, state: &mut [AF; 20]) {
@@ -133,10 +124,7 @@ impl<AF: AbstractField<F = Goldilocks>> Permutation<[AF; 20]> for DiffusionMatri
     }
 }
 
-impl<AF: AbstractField<F = Goldilocks>> DiffusionPermutation<AF, 20>
-    for DiffusionMatrixGoldilocks
-{
-}
+impl<AF: AbstractField<F = Goldilocks>> DiffusionPermutation<AF, 20> for DiffusionMatrixGoldilocks {}
 
 pub const HL_GOLDILOCKS_8_EXTERNAL_ROUND_CONSTANTS: [[u64; 8]; 8] = [
     [
