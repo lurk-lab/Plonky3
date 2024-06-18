@@ -19,13 +19,13 @@ fn get_diffusion_matrix_3() -> &'static [Bn254Fr; 3] {
 #[derive(Debug, Clone, Default)]
 pub struct DiffusionMatrixBN254;
 
-impl<AF: AbstractField + From<Bn254Fr>> Permutation<[AF; 3]> for DiffusionMatrixBN254 {
+impl<AF: AbstractField<F = Bn254Fr>> Permutation<[AF; 3]> for DiffusionMatrixBN254 {
     fn permute_mut(&self, state: &mut [AF; 3]) {
         matmul_internal::<Bn254Fr, AF, 3>(state, *get_diffusion_matrix_3());
     }
 }
 
-impl<AF: AbstractField + From<Bn254Fr>> DiffusionPermutation<AF, 3> for DiffusionMatrixBN254 {}
+impl<AF: AbstractField<F = Bn254Fr>> DiffusionPermutation<AF, 3> for DiffusionMatrixBN254 {}
 
 #[cfg(test)]
 mod tests {
