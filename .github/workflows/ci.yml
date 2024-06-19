@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [ "main", "dev" ]
+    branches: [ "main", "dev", "sp1-new" ]
   pull_request:
     branches: [ "*" ]
 
@@ -62,9 +62,11 @@ jobs:
       - name: Doctests
         run: cargo test --doc --workspace
 
+  # On a push or pull request to `sp1-new`, check downstream crates compile, i.e.
+  # lurk-lab/sphinx and lurk-lab/zk-light-clients
   check-downstream-compiles:
     runs-on: warp-ubuntu-latest-x64-16x
-    if: ${{ github.base_ref == 'sp1-new' }}
+    if: ${{ github.base_ref == 'sp1-new' || github.ref_name == 'sp1-new' }}
     steps:
       - name: Set up git private repo access
         run: |
@@ -76,7 +78,6 @@ jobs:
           path: ci-workflows
           ref: downstream-transitive
       - uses: ./ci-workflows/.github/actions/ci-env
-      # Check that lurk-lab/sphinx compiles
       - name: Set env
         run: |
           echo "UPSTREAM_REPO=$(echo "lurk-lab/Plonky3" | awk -F'/' '{ print $2 }')" | tee -a $GITHUB_ENV
