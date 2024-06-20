@@ -76,7 +76,6 @@ jobs:
         with:
           repository: lurk-lab/ci-workflows
           path: ci-workflows
-          ref: downstream-transitive
       - uses: ./ci-workflows/.github/actions/ci-env
       - name: Set env
         run: |
