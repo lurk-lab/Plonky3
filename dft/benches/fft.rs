@@ -1,7 +1,7 @@
 use std::any::type_name;
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
-use p3_baby_bear::BabyBear;
+use p3_baby_bear::{BabyBear, BabyBearIcicleDft};
 use p3_dft::{Radix2Bowers, Radix2Dit, Radix2DitParallel, TwoAdicSubgroupDft};
 use p3_field::extension::Complex;
 use p3_field::TwoAdicField;
@@ -15,33 +15,34 @@ fn bench_fft(c: &mut Criterion) {
     // log_sizes correspond to the sizes of DFT we want to benchmark;
     // for the DFT over the quadratic extension "Mersenne31Complex" a
     // fairer comparison is to use half sizes, which is the log minus 1.
-    let log_sizes = &[14, 16, 18];
+    let log_sizes = &[18, 20, 22];
     let log_half_sizes = &[13, 15, 17];
 
     const BATCH_SIZE: usize = 100;
+    
+    fft::<BabyBear, BabyBearIcicleDft, BATCH_SIZE>("BabyBear", "BabyBearIcicleDft", c, log_sizes);
+    fft::<BabyBear, Radix2Dit<_>, BATCH_SIZE>("BabyBear", "Radix2Dit", c, log_sizes);
+    fft::<BabyBear, Radix2Bowers, BATCH_SIZE>("BabyBear", "Radix2Bowers", c, log_sizes);
+    fft::<BabyBear, Radix2DitParallel, BATCH_SIZE>("BabyBear", "Radix2DitParallel", c, log_sizes);
+    // fft::<Goldilocks, Radix2Dit<_>, BATCH_SIZE>(c, log_sizes);
+    // fft::<Goldilocks, Radix2Bowers, BATCH_SIZE>(c, log_sizes);
+    // fft::<Goldilocks, Radix2DitParallel, BATCH_SIZE>(c, log_sizes);
+    // fft::<Complex<Mersenne31>, Radix2Dit<_>, BATCH_SIZE>(c, log_half_sizes);
+    // fft::<Complex<Mersenne31>, Radix2Bowers, BATCH_SIZE>(c, log_half_sizes);
+    // fft::<Complex<Mersenne31>, Radix2DitParallel, BATCH_SIZE>(c, log_half_sizes);
 
-    fft::<BabyBear, Radix2Dit<_>, BATCH_SIZE>(c, log_sizes);
-    fft::<BabyBear, Radix2Bowers, BATCH_SIZE>(c, log_sizes);
-    fft::<BabyBear, Radix2DitParallel, BATCH_SIZE>(c, log_sizes);
-    fft::<Goldilocks, Radix2Dit<_>, BATCH_SIZE>(c, log_sizes);
-    fft::<Goldilocks, Radix2Bowers, BATCH_SIZE>(c, log_sizes);
-    fft::<Goldilocks, Radix2DitParallel, BATCH_SIZE>(c, log_sizes);
-    fft::<Complex<Mersenne31>, Radix2Dit<_>, BATCH_SIZE>(c, log_half_sizes);
-    fft::<Complex<Mersenne31>, Radix2Bowers, BATCH_SIZE>(c, log_half_sizes);
-    fft::<Complex<Mersenne31>, Radix2DitParallel, BATCH_SIZE>(c, log_half_sizes);
+    // fft::<Complex<Mersenne31>, Mersenne31ComplexRadix2Dit, BATCH_SIZE>(c, log_half_sizes);
+    // m31_fft::<Radix2Dit<_>, BATCH_SIZE>(c, log_sizes);
+    // m31_fft::<Mersenne31ComplexRadix2Dit, BATCH_SIZE>(c, log_sizes);
 
-    fft::<Complex<Mersenne31>, Mersenne31ComplexRadix2Dit, BATCH_SIZE>(c, log_half_sizes);
-    m31_fft::<Radix2Dit<_>, BATCH_SIZE>(c, log_sizes);
-    m31_fft::<Mersenne31ComplexRadix2Dit, BATCH_SIZE>(c, log_sizes);
+    // ifft::<Goldilocks, Radix2Dit<_>, BATCH_SIZE>(c);
 
-    ifft::<Goldilocks, Radix2Dit<_>, BATCH_SIZE>(c);
-
-    coset_lde::<BabyBear, Radix2Bowers, BATCH_SIZE>(c);
-    coset_lde::<Goldilocks, Radix2Bowers, BATCH_SIZE>(c);
-    coset_lde::<BabyBear, Radix2DitParallel, BATCH_SIZE>(c);
+    // coset_lde::<BabyBear, Radix2Bowers, BATCH_SIZE>(c);
+    // coset_lde::<Goldilocks, Radix2Bowers, BATCH_SIZE>(c);
+    // coset_lde::<BabyBear, Radix2DitParallel, BATCH_SIZE>(c);
 }
 
-fn fft<F, Dft, const BATCH_SIZE: usize>(c: &mut Criterion, log_sizes: &[usize])
+fn fft<F, Dft, const BATCH_SIZE: usize>(field_name: &str, dft_name: &str, c: &mut Criterion, log_sizes: &[usize])
 where
     F: TwoAdicField,
     Dft: TwoAdicSubgroupDft<F>,
@@ -49,8 +50,8 @@ where
 {
     let mut group = c.benchmark_group(&format!(
         "fft::<{}, {}, {}>",
-        type_name::<F>(),
-        type_name::<Dft>(),
+        field_name,
+        dft_name,
         BATCH_SIZE
     ));
     group.sample_size(10);

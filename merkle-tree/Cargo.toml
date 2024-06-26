@@ -15,6 +15,10 @@ itertools = "0.12.0"
 tracing = "0.1.37"
 serde = { version = "1.0", default-features = false, features = ["alloc"] }
 
+icicle-cuda-runtime = { git = "https://github.com/ingonyama-zk/icicle.git" }
+icicle-core = { git = "https://github.com/ingonyama-zk/icicle.git" }
+icicle-babybear = { git = "https://github.com/ingonyama-zk/icicle.git" }
+
 [dev-dependencies]
 p3-blake3 = { path = "../blake3" }
 p3-keccak = { path = "../keccak" }
