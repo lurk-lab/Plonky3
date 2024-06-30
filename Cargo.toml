@@ -27,6 +27,7 @@ members = [
     "poseidon2",
     "rescue",
     "symmetric",
+    "stir",
     "util",
     "uni-stark",
 ]
